@@ -46,7 +46,7 @@ def pruning(Q, pi, tree, site):
             else:
                 # in this case the node is a leaf
                 likelihood = np.zeros(4)
-                likelihood(observation(node)) = 1
+                likelihood[observation[node]] = 1
                 return likelihood
 
     for node in tree:
