@@ -26,7 +26,7 @@ def pruning(Q, pi, tree, site):
     n = len(site)
     observation = np.zeros(n)
     for i, nucleotide in enumerate(site):
-        observation(i) = nucleotide_map[nucleotide]
+        observation[i] = nucleotide_map[nucleotide]
 
     def posterior_proba(node):
         if node in dynamic_probas:
