@@ -11,26 +11,25 @@ def forward(A, b, E, mode):
             'sum' for Sum-Product
     :return: if 'max', matrix of alpha-messages and the argmax matrix ; if 'sum', matrix of alpha-messages
     '''
-    # Initializaton
-    M, L = E.shape
-    alpha = np.zeros((M, L))
-    alpha[:, 0] = b*E[:, 0]
-    # Recursion
-    if mode == 'max':
-        argmaxAlpha = np.zeros((M, L), dtype=int)
+    if mode != 'max' and mode != 'sum':
+        return "Error: Input parameter mode must be 'sum' or 'max'!"
+    else:
+        # Initializaton
+        M, L = E.shape
+        alpha = np.zeros((M, L))
+        alpha[:, 0] = b*E[:, 0]
+        argmaxAlpha = np.zeros((M, L), dtype=int)  # useful for mode 'max' only
+        # Recursion
         for t in range(1, L):
             for s in range(M):
                 prob = A[:, s]*alpha[:, t - 1]
-                alpha[s, t] = E[s, t]*max(prob)
-                argmaxAlpha[s, t] = np.argmax(prob)
-        return [alpha, argmaxAlpha]
-    elif mode == 'sum':
-        for t in range(1, L):
-            for s in range(M):
-                alpha[s, t] = E[s, t]*(A[:, s].dot(alpha[:, t-1]))
-        return alpha
-    else:
-        return "Error: Input parameter mode must be 'sum' or 'max'!"
+                if mode == 'sum':
+                    prob = sum(prob)
+                else:
+                    argmaxAlpha[s, t] = np.argmax(prob)
+                    prob = max(prob)
+                alpha[s, t] = E[s, t]*prob
+        return alpha if mode == 'sum' else [alpha, argmaxAlpha]
 
 
 def backward(A, E):
@@ -93,3 +92,12 @@ def viterbi(S, A, b, E):
         opt_sequence[t] = argmaxAlpha[opt_sequence[t+1], t+1]
         phi[t] = S[opt_sequence[t]]
     return phi
+
+
+## TEST
+S=np.array([1,2,3])
+A = np.array([[0.2, 0.4, 0.4], [0.1, 0.3, 0.6], [0.5, 0.2, 0.3]])
+b = np.array([0.2, 0.3, 0.5])
+E = np.array([[0.2, 0.6, 0.5], [0.1,  0.1, 0.4], [0.7,  0.3, 0.1]])
+path = viterbi(S, A, b, E)
+pp = sum_product(A, b, E)
