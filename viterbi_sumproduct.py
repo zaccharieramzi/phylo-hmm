@@ -16,22 +16,21 @@ def forward(A, b, E, mode):
     alpha = np.zeros((M, L))
     alpha[:, 0] = b*E[:, 0]
     # Recursion
-    if mode != 'sum' and mode != 'max':
-        return "Error: Input parameter mode must be 'sum' or 'max'!"
+    if mode == 'max':
+        argmaxAlpha = np.zeros((M, L), dtype=int)
+        for t in range(1, L):
+            for s in range(M):
+                prob = A[:, s]*alpha[:, t - 1]
+                alpha[s, t] = E[s, t]*max(prob)
+                argmaxAlpha[s, t] = np.argmax(prob)
+        return [alpha, argmaxAlpha]
+    elif mode == 'sum':
+        for t in range(1, L):
+            for s in range(M):
+                alpha[s, t] = E[s, t]*(A[:, s].dot(alpha[:, t-1]))
+        return alpha
     else:
-        if mode == 'max':
-            argmaxAlpha = np.zeros((M, L), dtype=int)
-            for t in range(1, L):
-                for s in range(M):
-                    prob = A[:, s]*alpha[:, t - 1]
-                    alpha[s, t] = E[s, t]*max(prob)
-                    argmaxAlpha[s, t] = np.argmax(prob)
-            return [alpha, argmaxAlpha]
-        else:
-            for t in range(1, L):
-                for s in range(M):
-                    alpha[s, t] = E[s, t]*(A[:, s].dot(alpha[:, t-1]))
-            return alpha
+        return "Error: Input parameter mode must be 'sum' or 'max'!"
 
 
 def backward(A, E):
@@ -62,8 +61,10 @@ def sum_product(A, b, E):
     '''
     M, L = E.shape
     post_probas = np.zeros((M, L))
+    # Forward and backward procedure to compute the alpha and beta messages
     alpha = forward(A, b, E, 'sum')
     beta = backward(A, E)
+    # Posterior probabilities computation
     for t in range(L):
         post_probas[:, t] = (alpha[:, t]*beta[:, t]) / (alpha[:, t].dot(beta[:, t]))
     return post_probas
