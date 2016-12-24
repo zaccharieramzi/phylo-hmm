@@ -92,12 +92,3 @@ def viterbi(S, A, b, E):
         opt_sequence[t] = argmaxAlpha[opt_sequence[t+1], t+1]
         phi[t] = S[opt_sequence[t]]
     return phi
-
-
-## TEST
-S=np.array([1,2,3])
-A = np.array([[0.2, 0.4, 0.4], [0.1, 0.3, 0.6], [0.5, 0.2, 0.3]])
-b = np.array([0.2, 0.3, 0.5])
-E = np.array([[0.2, 0.6, 0.5], [0.1,  0.1, 0.4], [0.7,  0.3, 0.1]])
-path = viterbi(S, A, b, E)
-pp = sum_product(A, b, E)
