@@ -14,7 +14,7 @@ def forward(A, b, E, mode):
     if mode != 'max' and mode != 'sum':
         return "Error: Input parameter mode must be 'sum' or 'max'!"
     else:
-        # Initializaton
+        # Initialization
         M, L = E.shape
         alpha = np.zeros((M, L))
         alpha[:, 0] = b*E[:, 0]
@@ -45,8 +45,7 @@ def backward(A, E):
     beta[:, -1] = 1
     # Recursion
     for t in range(L-2, -1, -1):
-        for s in range(M):
-            beta[s, t] = A[s, :].dot(E[:, t+1]*beta[:, t+1])
+        beta[:, t] = A.dot(E[:, t+1]*beta[:, t+1])
     return beta
 
 
@@ -64,8 +63,7 @@ def sum_product(A, b, E):
     alpha = forward(A, b, E, 'sum')
     beta = backward(A, E)
     # Posterior probabilities computation
-    for t in range(L):
-        post_probas[:, t] = (alpha[:, t]*beta[:, t]) / (alpha[:, t].dot(beta[:, t]))
+    post_probas = alpha*beta / np.sum(alpha*beta, axis=0)
     return post_probas
 
 
