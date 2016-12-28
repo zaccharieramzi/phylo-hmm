@@ -46,13 +46,38 @@ def main(tree_path, number_of_nucleotids):
     # translation/transversion rate
     kappa = np.array([2.3, 2.7, 4.3, 5.4])
 
+    strands, states = generate_case(A, b, pi, kappa,
+                                    trees, number_of_nucleotids)
+    print(strands)
+
+
+def generate_case(A, b, pi, kappa, trees, number_of_nucleotids):
+    """
+    Generate a test case with DNA strands and the list of Ground truth states
+    Args :
+           - A (np array : nbState, nbState) state transition matrix
+           - b (np vector: alphabetSize) initial discrete probability
+               distribution for the nucleotids
+           - pi (np vector:  alphabetSize) transition probabilities
+           - kappa (np vector: size nbState) translation transversion rate
+           - trees (list of dicts) list of phylogenetic trees
+           - number_of_nucleotids (int) number of nucleotid in each strand
+    returns :
+           - strands (list of np vector uint8: number_of_nucleotids)
+               list of the sequence of nucleotids for each taxa
+           - states (np vector uint8: number_of_nucleotids) list of ground
+               truth states for each sie
+    """
     Q = rate_sub_HKY(pi, kappa)
     # generation
 
     # initial values
     X = generate_initial_vector(b, number_of_nucleotids)
+    # GT states
     states = generate_gt_state(A, number_of_nucleotids)
-    print(evolution(X, states, trees, Q))
+    strands = evolution(X, states, trees, Q)
+
+    return strands, states
 
 
 def scale_branches_length(tree, scale=0.1):
@@ -193,8 +218,6 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
-    # define the number of images to generate and run the script
     args = parse_args()
-
 
     main(args.tree_path, args.number_of_nucleotids)
