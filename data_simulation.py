@@ -81,16 +81,28 @@ pi[3] = np.random.rand(alphabetSize) * 0.01
 # translation/transversion rate
 kappa = np.array([2.3, 2.7, 4.3, 5.4])
 
-# define the rate substitution matrix according to the HKY model
-Q = np.zeros((nbState, alphabetSize, alphabetSize))
-for j in range(nbState):
-    for i in range(alphabetSize):
-        Q[j, i, :] = pi[j]
-        Q[j, i, (i + 2) % alphabetSize] *= kappa[j]
-        # put in each diagonal a term such that the rows sums to 0
-        Q[j, i, i] -= np.sum(Q[j, i, :])
 
+def rate_sub_HKY(pi, kappa):
+    """ define the rate substitution matrices according to the HKY model for
+    all states
+    Args :
+           - pi (np vector, size alphabetSize) transition probabilities
+           - kappa (np vector, size nb states) translation transversion rate
+    returns : Q (np array, nb states x alphabetSize x alphabetSize)
+    the rate substituon matrices for a states
+    """
+    nbState = len(kappa)
+    alphabetSize = len(pi)
+    Q = np.zeros((nbState, alphabetSize, alphabetSize))
+    for j in range(nbState):
+        for i in range(alphabetSize):
+            Q[j, i, :] = pi[i]
+            Q[j, i, (i + 2) % alphabetSize] *= kappa[j]
+            # put in each diagonal a term such that the rows sums to 0
+            Q[j, i, i] -= np.sum(Q[j, i, :])
+    return Q
 
+Q = rate_sub_HKY(pi, kappa)
 # generation
 
 # initial values
