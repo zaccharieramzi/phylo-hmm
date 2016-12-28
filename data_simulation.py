@@ -1,42 +1,61 @@
 import numpy as np
 from scipy.linalg import expm
 from copy import deepcopy
+import argparse
+
+from tree_serialisation import load_tree
 
 
+def main(tree_path, number_of_nucleotids):
+    alphabet = ['A', 'C', 'T', 'G']
+    alphabetSize = len(alphabet)
 
-alphabet = ['A', 'C', 'T', 'G']
-alphabetSize = len(alphabet)
+    nbState = 4
+    # transition matrix of the toy gene finder
+    A = np.zeros((nbState, nbState))
+    A[0, 1] = 1
+    A[1, 2] = 1
+    A[2, 3] = 0.011
+    A[2, 0] = 1 - A[2, 3]
+    A[3, 3] = 0.9999  # unrealistic ...
+    A[3, 0] = 1 - A[3, 3]
 
-nbState = 4
-# transition matrix of the toy gene finder
-A = np.zeros((nbState, nbState))
-A[0, 1] = 1
-A[1, 2] = 1
-A[2, 3] = 0.011
-A[2, 0] = 1 - A[2, 3]
-A[3, 3] = 0.9999  # unrealistic ...
-A[3, 0] = 1 - A[3, 3]
+    # state initial probability
+    b = np.array([0.25, 0.25, 0.26, 0.24])
+    # load the phylogenetic model from JSON
+    tree = load_tree(tree_path)
+    trees = []
 
-# state initial probability
-b = np.array([0.25, 0.25, 0.26, 0.24])
+    for j in range(nbState):
+        trees.append(scale_branches_length(tree))
 
-# nodes numeroted from 1 to 15
-tree = {
-    15: [{"node": 13, "branch": 0.2}, {"node": 14, "branch": 0.1}],
-    14: [{"node": 11, "branch": 0.2}, {"node": 12, "branch": 0.1}],
-    13: [{"node": 9, "branch": 0.2}, {"node": 10, "branch": 0.1}],
-    12: [{"node": 7, "branch": 0.2}, {"node": 8, "branch": 0.1}],
-    11: [{"node": 5, "branch": 0.2}, {"node": 6, "branch": 0.1}],
-    10: [{"node": 3, "branch": 0.2}, {"node": 4, "branch": 0.1}],
-    9: [{"node": 1, "branch": 0.2}, {"node": 2, "branch": 0.1}]
-}
-for i in range(1, 9):
-    tree[i] = []
+    animalNames = ["dog", "cat", "pig", "cow", "rat", "mouse", "baboon",
+                   "human"]
+    """[...], such as the higher average rate of substitution and the greater
+    transition/transversion ratio, in noncoding and third-codon-position sites
+    than in firstand second- codon-position sites[...]"""
 
-animalNames = ["dog", "cat", "pig", "cow", "rat", "mouse", "baboon", "human"]
+    pi = np.zeros((nbState, alphabetSize))
+    # substitution rates for pi 0 and 1 are between 0 and 0.001
+    pi[0] = np.random.rand(alphabetSize) * 0.001
+    pi[1] = np.random.rand(alphabetSize) * 0.001
+    # but between 0 and 0.01 for pi 2 and 3
+    pi[2] = np.random.rand(alphabetSize) * 0.01
+    pi[3] = np.random.rand(alphabetSize) * 0.01
+
+    # translation/transversion rate
+    kappa = np.array([2.3, 2.7, 4.3, 5.4])
+
+    Q = rate_sub_HKY(pi, kappa)
+    # generation
+
+    # initial values
+    X = generate_initial_vector(b, number_of_nucleotids)
+    states = generate_gt_state(A, number_of_nucleotids)
+    print(evolution(X, states, trees, Q))
 
 
-def shuffle_branches_length(tree, max_amp=0.1):
+def scale_branches_length(tree, scale=0.1):
     '''Given a tree in the dictionnary of list format it returns another
     tree with randomised branches length
         Args:
@@ -48,38 +67,16 @@ def shuffle_branches_length(tree, max_amp=0.1):
     '''
     tree_cp = deepcopy(tree)
 
-    def randomise_node(node):
+    def rescale_node(node):
         childs = tree_cp[node]
         if childs:
             for child in childs:
                 new_child = child["node"]
-                randomise_node(new_child)
-                child["branch"] = np.random.rand(1)[0] * max_amp
+                rescale_node(new_child)
+                child["branch"] *= scale
 
-    randomise_node(max(tree_cp.keys()))
+    rescale_node(max(tree_cp.keys()))
     return tree_cp
-
-
-trees = []
-
-for j in range(nbState):
-    trees.append(shuffle_branches_length(tree))
-
-
-"""[...], such as the higher average rate of substitution and the greater
-transition/transversion ratio, in noncoding and third-codon-position sites than
-in firstand second- codon-position sites[...]"""
-
-pi = np.zeros((nbState, alphabetSize))
-# substitution rates for pi 0 and 1 are between 0 and 0.001
-pi[0] = np.random.rand(alphabetSize) * 0.001
-pi[1] = np.random.rand(alphabetSize) * 0.001
-# but between 0 and 0.01 for pi 2 and 3
-pi[2] = np.random.rand(alphabetSize) * 0.01
-pi[3] = np.random.rand(alphabetSize) * 0.01
-
-# translation/transversion rate
-kappa = np.array([2.3, 2.7, 4.3, 5.4])
 
 
 def rate_sub_HKY(pi, kappa):
@@ -102,10 +99,7 @@ def rate_sub_HKY(pi, kappa):
             Q[j, i, i] -= np.sum(Q[j, i, :])
     return Q
 
-Q = rate_sub_HKY(pi, kappa)
-# generation
 
-# initial values
 def generate_initial_vector(b, nbNucleotids):
     '''Return a random vector of nucleotids as integers
         Args:
@@ -118,7 +112,7 @@ def generate_initial_vector(b, nbNucleotids):
     cumsum = np.cumsum(b)
     random_values = np.random.rand(nbNucleotids)
     X = np.empty(nbNucleotids, dtype=np.uint8)
-    for i in range(alphabetSize):
+    for i in range(b.shape[0]):
         X[random_values < cumsum[i]] = i
         random_values[random_values < cumsum[i]] = 1
     return X
@@ -188,6 +182,19 @@ def evolution(X, states, trees, Q):
             return [vector]
     return evolve(max(trees[0].keys()), X)
 
-X = generate_initial_vector(b, 100)
-states = generate_gt_state(A, 100)
-print(evolution(X, states, trees, Q))
+
+def parse_args():
+    parser = argparse.ArgumentParser("Data generation script")
+
+    parser.add_argument("tree_path",
+                        help="path of a JSON file encoding a tree")
+    parser.add_argument("-n", "--number_of_nucleotids", type=int,
+                        help="number of genrated nucleotids for each taxa")
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    # define the number of images to generate and run the script
+    args = parse_args()
+
+
+    main(args.tree_path, args.number_of_nucleotids)
