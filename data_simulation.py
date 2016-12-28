@@ -80,15 +80,16 @@ def generate_case(A, b, pi, kappa, trees, number_of_nucleotids):
     return strands, states
 
 
-def scale_branches_length(tree, scale=0.1):
+def scale_branches_length(tree, scale=1):
     '''Given a tree in the dictionnary of list format it returns another
     tree with randomised branches length
         Args:
             - tree (dict): the tree referencing the relationships between nodes
             and the branches length.
-            - max_amp (float, optionnal) : maximal amplitude of branch length
+            - scale (float, optionnal) : scaling factor applied to branch
+            lengths
         Output:
-            - tree with same shape but randomised branches length
+            - tree with same shape but scaled branches length
     '''
     tree_cp = deepcopy(tree)
 
@@ -146,7 +147,7 @@ def generate_initial_vector(b, nbNucleotids):
 def generate_gt_state(A, nbNucleotids):
     '''Use the state transition matrix A to generate of state path
         Args:
-            - nbState (np matrix) state transition matrix
+            - A (np matrix) state transition matrix
             - nbNucleotids (int) length of the DNA in Nucleotids
         Output:
             - np. vector of int from 0 to nbState-1
@@ -154,11 +155,13 @@ def generate_gt_state(A, nbNucleotids):
     states = np.empty(nbNucleotids, dtype=np.uint8)
 
     nbState = A.shape[0]
+    # the first one is random
     states[0] = np.random.randint(0, nbState, 1)[0]
     for i in range(nbNucleotids-1):
-
+        # draw the next state using the state transition matrix
         discrete_law = A[states[i]]
         discrete_law = np.cumsum(discrete_law)
+
         x = np.random.rand(1)[0]
 
         index = 0
@@ -180,7 +183,7 @@ def evolution(X, states, trees, Q):
             - tree with same shape but randomised branches length
     '''
 
-    def evolve(node, vector):
+    def evolve(node, strand):
         childs = trees[0][node]
         if childs:
             res = []
@@ -191,20 +194,20 @@ def evolution(X, states, trees, Q):
                     new_br = trees[j][node][c]["branch"]
                     new_Q[j] = expm(new_br * Q[j])
 
-                new_vector = np.zeros_like(vector)
-                for i in range(vector.shape[0]):
+                new_strand = np.zeros_like(vector)
+                for i in range(strand.shape[0]):
                     discrete_law = np.cumsum(new_Q[states[i]][vector[i]])
                     x = np.random.rand(1)[0]
                     index = 0
                     while x > discrete_law[index]:
                         index += 1
-                    new_vector[i] = index
+                    new_strand[i] = index
 
                 new_child = childs[c]["node"]
-                res += evolve(new_child, new_vector)
+                res += evolve(new_child, new_strand)
             return res
         else:
-            return [vector]
+            return [strand]
     return evolve(max(trees[0].keys()), X)
 
 
