@@ -22,7 +22,6 @@ def main(tree_path, number_of_nucleotids):
 
     # state initial probability
     b = np.array([0.25, 0.25, 0.26, 0.24])
-    background_freq = b
     # load the phylogenetic model from JSON
     tree = load_tree(tree_path)
     trees = []
@@ -43,16 +42,17 @@ def main(tree_path, number_of_nucleotids):
     # but between 0 and 0.01 for pi 2 and 3
     pi[2] = np.random.rand(alphabetSize) * 0.01
     pi[3] = np.random.rand(alphabetSize) * 0.01
+    pi /= pi.sum(axis=1)
 
     # translation/transversion rate
     kappa = np.array([2.3, 2.7, 4.3, 5.4])
 
-    strands, states = generate_case(A, b, background_freq, pi, kappa,
+    strands, states = generate_case(A, b, pi, kappa,
                                     trees, number_of_nucleotids)
     print(strands)
 
 
-def generate_case(A, b, background_freq, pi, kappa,
+def generate_case(A, b, pi, kappa,
                   trees, number_of_nucleotids):
     """
     Generate a test case with DNA strands and the list of Ground truth states
@@ -60,10 +60,8 @@ def generate_case(A, b, background_freq, pi, kappa,
            - A (np array : nbState, nbState) state transition matrix
            - b (np vector: alphabetSize) initial discrete probability
                distribution for the states
-            - background_freq (vector of float, sums to 1) initial discrete
-            distribution of nucleotids for a given site
-            - pi (nparray : nbState, alphabetSize) transition rate, state
-            dependent
+            - pi (nparray : nbState, alphabetSize) nucleotids background
+            frequencies, state dependent
            - kappa (np vector: size nbState) translation transversion rate
            - trees (list of dicts) list of phylogenetic trees
            - number_of_nucleotids (int) number of nucleotid in each strand
@@ -76,11 +74,11 @@ def generate_case(A, b, background_freq, pi, kappa,
     Q = rate_sub_HKY(pi, kappa)
     # generation
 
-    # initial values
-    X = generate_initial_vector(background_freq, number_of_nucleotids)
-
     # GT states
     states = generate_gt_state(A, b, number_of_nucleotids)
+    # initial values
+    X = generate_initial_vector(pi, states)
+
     strands = evolution(X, states, trees, Q)
 
     return strands, states
@@ -115,8 +113,8 @@ def rate_sub_HKY(pi, kappa):
     """ define the rate substitution matrices according to the HKY model for
     all states
     Args :
-            - pi (nparray : nbState, alphabetSize) transition rate, state
-            dependent
+            - pi (nparray : nbState, alphabetSize) nucleotids background
+            frequencies, state dependent
            - kappa (np vector, size nb states) translation/transversion rate
     returns : Q (np array, nb states x alphabetSize x alphabetSize)
     the rate substituon matrices for a states
@@ -133,27 +131,30 @@ def rate_sub_HKY(pi, kappa):
     return Q
 
 
-def generate_initial_vector(background_freq, nbNucleotids):
+def generate_initial_vector(pi, states):
     '''Return a random vector of nucleotids as integers
         Args:
-            - background_freq (array of float, sums to 1) initial discrete
-            distribution of nucleotids for a given site
-            - nbNucleotids (int), size of the output
+            - pi (nparray : nbState, alphabetSize) nucleotids background
+            frequencies, state dependent
+            - states (nparray: nbNucleotids), vector of the state for each site
         Output:
             - np.vector with values between 0 and size(b)-1
             follows distribution b
     '''
-    cumsum = np.cumsum(background_freq)
+    nbState, alphabetSize = pi.shape
+    nbNucleotids = states.shape[0]
+
+    cumsum = np.cumsum(pi, axis=1)
     random_values = np.random.rand(nbNucleotids)
-    X = cumsum.shape[0] * np.ones(nbNucleotids, dtype=np.uint8)
+    X = alphabetSize * np.ones(nbNucleotids, dtype=np.uint8)
     # now let us draw according to a discrete law in a vectorial way
-    for i in range(background_freq.shape[0]):
-        X[random_values < cumsum[i]] = i
+    for i in range(alphabetSize):
+        X[random_values < cumsum[states, i]] = i
         # we erase values that are lower than cumsum[i] to prevent the
         # corresponding nucleotid to be overwritten at the following step
-        random_values[random_values < cumsum[i]] = 1
+        random_values[random_values < cumsum[states, i]] = 1
     # in the unkikely event where random_values reached one
-    X[X == cumsum.shape[0]] = i
+    X[X == alphabetSize] = i
     return X
 
 
@@ -220,10 +221,7 @@ def evolution(X, states, trees, Q):
                 new_strand = alphabetSize * np.ones_like(strand)
                 # the new strand is drown randomly from the previous one
                 # using the probability matrix
-                cumsum = np.zeros_like(Q)
-                for j in range(nbState):
-                    for i in range(alphabetSize):
-                        cumsum[j, i] = np.cumsum(new_Q[j][i])
+                cumsum = np.cumsum(new_Q, axis=2)
                 random_values = np.random.rand(strand.shape[0])
                 # vectorial discrete draw
                 for i in range(alphabetSize):
