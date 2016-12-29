@@ -203,6 +203,8 @@ def evolution(X, states, trees, Q):
         Output:
             - tree with same shape but randomised branches length
     '''
+    nbState = Q.shape[0]
+    alphabetSize = Q.shape[1]
 
     def evolve(node, strand):
         childs = trees[0][node]
@@ -211,23 +213,24 @@ def evolution(X, states, trees, Q):
             for c in range(len(childs)):
                 new_Q = np.zeros_like(Q)
                 # compute probability matrices for every state for l&r branches
-                for j in range(len(Q)):
+                for j in range(nbState):
                     new_br = trees[j][node][c]["branch"]
                     new_Q[j] = expm(new_br * Q[j])
 
-                new_strand = np.zeros_like(strand)
+                new_strand = alphabetSize * np.ones_like(strand)
                 # the new strand is drown randomly from the previous one
                 # using the probability matrix
                 cumsum = np.zeros_like(Q)
-                for j in range(Q.shape[0]):
-                    for i in range(Q.shape[1]):
+                for j in range(nbState):
+                    for i in range(alphabetSize):
                         cumsum[j, i] = np.cumsum(new_Q[j][i])
                 random_values = np.random.rand(strand.shape[0])
                 # vectorial discrete draw
-                for i in range(Q.shape[1]):
+                for i in range(alphabetSize):
                     new_strand[random_values < cumsum[states, strand, i]] = i
                     random_values[
                         random_values < cumsum[states, strand, i]] = 1
+                new_strand[new_strand == alphabetSize] = i
 
                 new_child = childs[c]["node"]
                 res += evolve(new_child, new_strand)
