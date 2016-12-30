@@ -1,10 +1,11 @@
 import json
 
 
-def save_tree(file_path, tree):
-    json.dump(tree, file_path, sort_keys=True, indent=4,
-              separators=(',', ': '))
-    print("Tree saved to {:s}".format(file_path))
+def save_tree(filePath, tree):
+    with open(filePath, 'w') as f:
+        json.dump(tree, f, sort_keys=True, indent=4,
+                  separators=(',', ': '))
+        print("Tree saved to {:s}".format(file_path))
 
 
 def load_tree(filePath):
