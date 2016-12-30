@@ -2,25 +2,20 @@ import json
 
 
 def save_tree(file_path, tree):
-    with open(file_path, 'w') as f:
-        f.write(
-            json.dumps(tree, sort_keys=True, indent=4, separators=(',', ': ')))
-        f.flush()
-        f.close()
-
-        print("Tree saved to {:s}".format(file_path))
+    json.dump(tree, file_path, sort_keys=True, indent=4,
+              separators=(',', ': '))
+    print("Tree saved to {:s}".format(file_path))
 
 
 def load_tree(filePath):
     tree = {}
-    with open(filePath, 'r') as f:
-        tree = json.loads(f.read())
-        # we want key as integers
-        keys = list(tree.keys())
-        for key in keys:
-            if key.isdigit():
-                tree[int(key)] = tree[key]
-                tree.pop(key, None)
+    tree = json.load(filePath)
+    # we want key as integers
+    keys = list(tree.keys())
+    for key in keys:
+        if key.isdigit():
+            tree[int(key)] = tree[key]
+            tree.pop(key, None)
     return tree
 
 

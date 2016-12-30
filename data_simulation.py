@@ -146,15 +146,14 @@ def generate_initial_vector(pi, states):
 
     cumsum = np.cumsum(pi, axis=1)
     random_values = np.random.rand(nbNucleotids)
-    X = alphabetSize * np.ones(nbNucleotids, dtype=np.uint8)
+    X = np.zeros(nbNucleotids, dtype=np.uint8)
     # now let us draw according to a discrete law in a vectorial way
     for i in range(alphabetSize):
         X[random_values < cumsum[states, i]] = i
         # we erase values that are lower than cumsum[i] to prevent the
         # corresponding nucleotid to be overwritten at the following step
         random_values[random_values < cumsum[states, i]] = 1
-    # in the unkikely event where random_values reached one
-    X[X == alphabetSize] = i
+
     return X
 
 
@@ -218,7 +217,7 @@ def evolution(X, states, trees, Q):
                     new_br = trees[j][node][c]["branch"]
                     new_Q[j] = expm(new_br * Q[j])
 
-                new_strand = alphabetSize * np.ones_like(strand)
+                new_strand = np.zeros_like(strand)
                 # the new strand is drown randomly from the previous one
                 # using the probability matrix
                 cumsum = np.cumsum(new_Q, axis=2)
@@ -228,7 +227,6 @@ def evolution(X, states, trees, Q):
                     new_strand[random_values < cumsum[states, strand, i]] = i
                     random_values[
                         random_values < cumsum[states, strand, i]] = 1
-                new_strand[new_strand == alphabetSize] = i
 
                 new_child = childs[c]["node"]
                 res += evolve(new_child, new_strand)
