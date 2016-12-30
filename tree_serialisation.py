@@ -9,13 +9,14 @@ def save_tree(file_path, tree):
 
 def load_tree(filePath):
     tree = {}
-    tree = json.load(filePath)
-    # we want key as integers
-    keys = list(tree.keys())
-    for key in keys:
-        if key.isdigit():
-            tree[int(key)] = tree[key]
-            tree.pop(key, None)
+    with open(filePath) as f:
+        tree = json.load(f)
+        # we want key as integers
+        keys = list(tree.keys())
+        for key in keys:
+            if key.isdigit():
+                tree[int(key)] = tree[key]
+                tree.pop(key, None)
     return tree
 
 
