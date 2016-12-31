@@ -19,8 +19,8 @@ def pruning(Q, pi, tree, site):
     # posterior probabilities which were already calculated.
     nucleotide_map = {
         "A": 0,
-        "T": 1,
-        "C": 2,
+        "C": 1,
+        "T": 2,
         "G": 3
     }
     n = len(site)
