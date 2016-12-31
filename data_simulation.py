@@ -42,7 +42,7 @@ def main(tree_path, number_of_nucleotids):
     # but between 0 and 0.01 for pi 2 and 3
     pi[2] = np.random.rand(alphabetSize) * 0.01
     pi[3] = np.random.rand(alphabetSize) * 0.01
-    pi /= pi.sum(axis=1)
+    pi /= pi.sum(axis=1)[:, None]
 
     # translation/transversion rate
     kappa = np.array([2.3, 2.7, 4.3, 5.4])
