@@ -9,71 +9,71 @@
     "8": [],
     "9": [
         {
-            "branch": 0.2,
+            "branch": 0.93,
             "node": 1
         },
         {
-            "branch": 0.1,
+            "branch": 0.75,
             "node": 2
         }
     ],
     "10": [
         {
-            "branch": 0.2,
+            "branch": 1.02,
             "node": 3
         },
         {
-            "branch": 0.1,
+            "branch": 1.10,
             "node": 4
         }
     ],
     "11": [
         {
-            "branch": 0.2,
+            "branch": 0.75,
             "node": 5
         },
         {
-            "branch": 0.1,
+            "branch": 0.70,
             "node": 6
         }
     ],
     "12": [
         {
-            "branch": 0.2,
+            "branch": 0.27,
             "node": 7
         },
         {
-            "branch": 0.1,
+            "branch": 0.23,
             "node": 8
         }
     ],
     "13": [
         {
-            "branch": 0.2,
+            "branch": 0.5,
             "node": 9
         },
         {
-            "branch": 0.1,
+            "branch": 0.3,
             "node": 10
         }
     ],
     "14": [
         {
-            "branch": 0.2,
+            "branch": 2.77,
             "node": 11
         },
         {
-            "branch": 0.1,
+            "branch": 0.8,
             "node": 12
         }
     ],
     "15": [
         {
-            "branch": 0.2,
+            "branch": 0.23,
             "node": 13
         },
         {
-            "branch": 0.1,
+            "branch": 0.23,
             "node": 14
         }
     ]
