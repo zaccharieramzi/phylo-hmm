@@ -35,19 +35,6 @@ def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
     strands, states = generate_case(A, b, pi, kappa,
                                     trees, number_of_nucleotids)
 
-    # Transform strands from ints to strings
-    str_strands = list()
-    for strand in strands:
-        str_strand = ""
-        for acid_int in strand:
-            str_strand = ''.join([str_strand, alphabet[acid_int]])
-        str_strands += [str_strand]
-        # Transform strands in sites
-    sites = list()
-    for site_ind in range(number_of_nucleotids):
-        sites += [''.join([str_strands[species_ind][site_ind]
-                           for species_ind in range(n_species)])]
-
     # Process likelihoods with Felsenstein's algorithm
 
     Qs = rate_sub_HKY(pi, kappa)
