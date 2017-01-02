@@ -98,9 +98,9 @@ def scale_branches_length(tree, scale=1):
     tree_cp = deepcopy(tree)
 
     def rescale_node(node):
-        childs = tree_cp[node]
-        if childs:
-            for child in childs:
+        children = tree_cp[node]
+        if children:
+            for child in children:
                 new_child = child["node"]
                 rescale_node(new_child)
                 child["branch"] *= scale
@@ -207,10 +207,10 @@ def evolution(X, states, trees, Q):
     alphabetSize = Q.shape[1]
 
     def evolve(node, strand):
-        childs = trees[0][node]
-        if childs:
+        children = trees[0][node]
+        if children:
             res = []
-            for c in range(len(childs)):
+            for c in range(len(children)):
                 new_Q = np.zeros_like(Q)
                 # compute probability matrices for every state for l&r branches
                 for j in range(nbState):
@@ -228,7 +228,7 @@ def evolution(X, states, trees, Q):
                     random_values[
                         random_values < cumsum[states, strand, i]] = 1
 
-                new_child = childs[c]["node"]
+                new_child = children[c]["node"]
                 res += evolve(new_child, new_strand)
             return res
         else:
