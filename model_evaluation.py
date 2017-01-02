@@ -3,9 +3,10 @@ import random
 import numpy as np
 
 from data_simulation import generate_case, rate_sub_HKY, scale_branches_length
-from felsenstein import pruning
+from felsenstein import pruning, np_pruning
 from tree_serialisation import load_tree
 from viterbi_sumproduct import sum_product, viterbi
+import time
 
 
 def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
@@ -14,21 +15,33 @@ def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
     '''Generates a sequence of states and an associated list of strands. Then
     decodes those using a phylogenetic HMM model.
     '''
+
+    labs = []
+    times = []
     nbState = A.shape[0]
+    start = time.time()
     # load the phylogenetic model from JSON
     tree = load_tree(tree_path)
+    times.append(time.time() - start)
+    labs.append("load")
     trees = []
 
+    start = time.time()
     if list_of_species:
         tree = sub_tree(tree, list_of_species)
         n_species = len(list_of_species)
+    times.append(time.time() - start)
+    labs.append("subtree")
 
     for j in range(nbState):
         scaling_factor = random.random()
         trees.append(scale_branches_length(tree, scale=scaling_factor))
-
+    start = time.time()
     strands, states = generate_case(A, b, pi, kappa,
                                     trees, number_of_nucleotids)
+    times.append(time.time() - start)
+    labs.append("case")
+    start = time.time()
     # Transform strands from ints to strings
     str_strands = list()
     for strand in strands:
@@ -41,29 +54,51 @@ def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
     for site_ind in range(number_of_nucleotids):
         sites += [''.join([str_strands[species_ind][site_ind]
                            for species_ind in range(n_species)])]
+    times.append(time.time() - start)
+    labs.append("conversion")
+
     # Process likelihoods with Felsenstein's algorithm
+    start = time.time()
     Qs = rate_sub_HKY(pi, kappa)
+    # likelihoods = np.zeros((nbState, number_of_nucleotids))
+    # for state in range(nbState):
+    #     tree = trees[state]
+    #     Q = Qs[state]
+    #     p = pi[state]
+    #     for site_ind, site in enumerate(sites):
+    #         likelihoods[state, site_ind] = pruning(Q, p, tree, site)
+    # times.append(time.time() - start)
+    # labs.append("pruning")
+    # Process likelihoods with Felsenstein's algorithm
+    start = time.time()
     likelihoods = np.zeros((nbState, number_of_nucleotids))
+    sites = np.zeros((number_of_nucleotids, n_species))
+    for i in range(n_species):
+        sites[:, i] = strands[i]
     for state in range(nbState):
         tree = trees[state]
         Q = Qs[state]
         p = pi[state]
-        for site_ind, site in enumerate(sites):
-            likelihoods[state, site_ind] = pruning(Q, p, tree, site)
+        likelihoods[state] = np_pruning(Q, p, tree, sites)
+    times.append(time.time() - start)
+    labs.append("np pruning")
     # VITERBI PARAMETERS
     S = range(nbState)
+    start = time.time()
     if alg == 'viterbi':
         state_sequence_decoded = viterbi(S, A, b, likelihoods)
     elif alg == 'sp':
         state_sequence_decoded = np.argmax(sum_product(S, A, b, likelihoods),
                                            axis=0)
+    times.append(time.time() - start)
+    labs.append("hmm")
     # Metrics
     precision = np.sum(states == state_sequence_decoded) / number_of_nucleotids
     reference_codon_sequence = translate_states_to_codons(states)
     decoded_codon_sequence = translate_states_to_codons(state_sequence_decoded)
     sens = sensitivity(reference_codon_sequence, decoded_codon_sequence)
     spec = specificity(reference_codon_sequence, decoded_codon_sequence)
-    return precision, sens, spec
+    return precision, sens, spec, labs, np.array(times)
 
 
 def translate_states_to_codons(states):
