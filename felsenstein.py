@@ -72,7 +72,7 @@ def np_pruning(Q, pi, tree, sites):
 
     nb_nucleotides, n_species = sites.shape
     observation = sites.copy()
-    x_index = np.arange(nb_nucleotides)  #frequently used variable
+    x_index = np.arange(nb_nucleotides)  # frequently used variable
 
     def posterior_proba(node):
         if node in dynamic_probas:
