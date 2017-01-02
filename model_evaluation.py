@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 
 import numpy as np
 
@@ -29,7 +30,7 @@ def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
         n_species = len(list_of_species)
 
     for j in range(nbState):
-        scaling_factor = random.random()
+        scaling_factor = 0.1 + random.random()
         trees.append(scale_branches_length(tree, scale=scaling_factor))
 
     strands, states = generate_case(A, b, pi, kappa,
