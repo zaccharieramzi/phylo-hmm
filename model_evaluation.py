@@ -73,11 +73,11 @@ def translate_states_to_codons(states):
     '''Transforms a state sequence into a codon/non-codon sequence. With states
     corresponding to codons being (0-1-2) et non-codons being (3).
         Args :
-            - states (list or ndarray): the sequence of state
+            - states (ndarray): the sequence of state
         Output:
             - ndarray: the corresponding codon(1)/non-codon(0) sequence
     '''
-    return np.array(1 - (states == 3))
+    return 1 - (states == 3)
 
 
 def sensitivity(reference_codon_sequence, comparison_codon_sequence):
