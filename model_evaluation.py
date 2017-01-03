@@ -81,37 +81,37 @@ def translate_states_to_codons(states):
 
 
 def sensitivity(reference_codon_sequence, comparison_codon_sequence):
-    '''Calculates the true positive rate
+    '''Portion correctly predicted of sites actually in genes
         Args:
-            - reference_codon_sequence (list or ndarray): the true codon
+            - reference_codon_sequence (ndarray): the true codon
             sequence
-            - comparison_codon_sequence (list or ndarray): the codon to compare
+            - comparison_codon_sequence (ndarray): the codon to compare
             to the reference sequence
         Output:
-            - float: the TP rate
+            - float: the sensitivity
+    '''
+    positive_predictions = comparison_codon_sequence == 1
+    true_predicitons = np.equal(
+        reference_codon_sequence, comparison_codon_sequence)
+    true_positives = positive_predictions * true_predicitons
+    return np.sum(true_positives) / np.sum(true_predicitons)
+
+
+def specificity(reference_codon_sequence, comparison_codon_sequence):
+    '''Portion correct of sites predicted to be in genes
+        Args:
+            - reference_codon_sequence (ndarray): the true codon
+            sequence
+            - comparison_codon_sequence (ndarray): the codon to compare
+            to the reference sequence
+        Output:
+            - float: the specificity
     '''
     positive_predictions = comparison_codon_sequence == 1
     true_predicitons = np.equal(
         reference_codon_sequence, comparison_codon_sequence)
     true_positives = positive_predictions * true_predicitons
     return np.sum(true_positives) / np.sum(positive_predictions)
-
-
-def specificity(reference_codon_sequence, comparison_codon_sequence):
-    '''Calculates the true negative rate
-        Args:
-            - reference_codon_sequence (list or ndarray): the true codon
-            sequence
-            - comparison_codon_sequence (list or ndarray): the codon to compare
-            to the reference sequence
-        Output:
-            - float: the TN rate
-    '''
-    negative_predictions = comparison_codon_sequence == 0
-    true_predicitons = np.equal(
-        reference_codon_sequence, comparison_codon_sequence)
-    true_negatives = negative_predictions * true_predicitons
-    return np.sum(true_negatives) / np.sum(negative_predictions)
 
 
 def sub_tree(tree, list_of_species):
