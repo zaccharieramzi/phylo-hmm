@@ -120,7 +120,7 @@ def rate_sub_HKY(pi, kappa):
     the rate substituon matrices for a states
     """
     nbState = len(kappa)
-    alphabetSize = len(pi)
+    alphabetSize = pi.shape[1]
     Q = np.zeros((nbState, alphabetSize, alphabetSize))
     for j in range(nbState):
         for i in range(alphabetSize):
