@@ -77,14 +77,7 @@ def translate_states_to_codons(states):
         Output:
             - ndarray: the corresponding codon(1)/non-codon(0) sequence
     '''
-    codon_sequence = list()
-    n_nucleotids = len(states)
-    for state_ind, state in enumerate(states):
-        if int(state) == 3:
-            codon_sequence += [0]
-        else:
-            codon_sequence += [1]
-    return np.array(codon_sequence)
+    return np.array(1 - (states == 3))
 
 
 def sensitivity(reference_codon_sequence, comparison_codon_sequence):
