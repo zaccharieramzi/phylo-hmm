@@ -4,3 +4,4 @@ jupyter==1.0.0
 jupyter-client==4.4.0
 jupyter-console==5.0.0
 jupyter-core==4.2.1
+matplotlib==1.5.3
