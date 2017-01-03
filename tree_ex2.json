@@ -10,81 +10,81 @@
     "9": [],
     "10": [
         {
-            "branch": 0.93,
+            "branch": 0.1077,
             "node": 1
         },
         {
-            "branch": 0.75,
+            "branch": 0.0852,
             "node": 2
         }
     ],
     "11": [
         {
-            "branch": 1.02,
+            "branch": 0.1150,
             "node": 3
         },
         {
-            "branch": 1.10,
+            "branch": 0.1228,
             "node": 4
         }
     ],
     "12": [
         {
-            "branch": 0.75,
+            "branch": 0.0847,
             "node": 5
         },
         {
-            "branch": 0.70,
+            "branch": 0.0767,
             "node": 6
         }
     ],
     "13": [
         {
-            "branch": 0.23,
+            "branch": 0.0053,
             "node": 8
         },
         {
-            "branch": 0.23,
+            "branch": 0.0048,
             "node": 9
         }
     ],
     "14": [
         {
-            "branch": 0.27,
+            "branch": 0.0331,
             "node": 7
         },
         {
-            "branch": 0.23,
+            "branch": 0.0190,
             "node": 13
         }
     ],
     "15": [
         {
-            "branch": 0.5,
+            "branch": 0.0567,
             "node": 10
         },
         {
-            "branch": 0.3,
+            "branch": 0.0392,
             "node": 11
         }
     ],
     "16": [
         {
-            "branch": 2.77,
+            "branch": 0.3220,
             "node": 12
         },
         {
-            "branch": 0.8,
+            "branch": 0.0939,
             "node": 14
         }
     ],
     "17": [
         {
-            "branch": 0.23,
+            "branch": 0.0269,
             "node": 15
         },
         {
-            "branch": 0.23,
+            "branch": 0.0299,
             "node": 16
         }
     ]
