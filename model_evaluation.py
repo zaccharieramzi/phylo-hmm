@@ -10,8 +10,8 @@ from viterbi_sumproduct import sum_product, viterbi
 
 
 def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
-                            b, n_species, pi, kappa, alg='viterbi',
-                            list_of_species=[]):
+                            b, n_species, pi, kappa, scaling_factors,
+                            alg='viterbi', list_of_species=[]):
     '''Generates a sequence of states and an associated list of strands. Then
     decodes those using a phylogenetic HMM model.
     '''
@@ -30,8 +30,7 @@ def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
         n_species = len(list_of_species)
 
     for j in range(nbState):
-        scaling_factor = 0.1 + random.random()
-        trees.append(scale_branches_length(tree, scale=scaling_factor))
+        trees.append(scale_branches_length(tree, scale=scaling_factors[j]))
 
     strands, states = generate_case(A, b, pi, kappa,
                                     trees, number_of_nucleotids)
@@ -111,6 +110,9 @@ def specificity(reference_codon_sequence, comparison_codon_sequence):
     true_predicitons = np.equal(
         reference_codon_sequence, comparison_codon_sequence)
     true_positives = positive_predictions * true_predicitons
+    if np.sum(positive_predictions) == 0:
+        import pdb
+        pdb.Pdb().set_trace()
     return np.sum(true_positives) / np.sum(positive_predictions)
 
 
