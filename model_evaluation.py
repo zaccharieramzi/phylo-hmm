@@ -9,6 +9,40 @@ from tree_serialisation import load_tree
 from viterbi_sumproduct import sum_product, viterbi
 
 
+def gene_finding_metrics(real_states, decoded_states):
+    '''Computes the three metrics we need in the first example.
+    '''
+    precision = np.sum(real_states == decoded_states) / number_of_nucleotids
+    reference_codon_sequence = translate_states_to_codons(real_states)
+    decoded_codon_sequence = translate_states_to_codons(decoded_states)
+    sens = sensitivity(reference_codon_sequence, decoded_codon_sequence)
+    spec = specificity(reference_codon_sequence, decoded_codon_sequence)
+    return precision, sens, spec
+
+
+def conserved_regions_metrics(real_states, posterior_proba_interest,
+                              state_of_interest=0, steps=0.1, thresholds=None):
+    '''Computes a false positive rate and true positive rate for different
+    threshold values
+    '''
+    if thresholds is None:
+        thresholds = np.arange(0, 1, steps)
+    interest_values = real_states == state_of_interest
+    fp_rates = np.zeros(len(thresholds))
+    tp_rates = np.zeros(len(thresholds))
+    for t_idx, threshold in enumerate(thresholds):
+        identified_interest = posterior_proba_interest > threshold
+        true_predicitons = np.equal(interest_values, identified_interest)
+        false_predictions = np.not_equal(interest_values, identified_interest)
+        correctly_identified_p = identified_interest * true_predicitons
+        tp_rates[t_idx] = np.sum(correctly_identified_p) / np.sum(
+            interest_values)
+        wrongly_identified_p = identified_interest * false_predictions
+        fp_rates[t_idx] = np.sum(wrongly_identified_p) / np.sum(
+            1-interest_values)
+    return tp_rates, fp_rates
+
+
 def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
                             b, n_species, pi, kappa, scaling_factors,
                             alg='viterbi', list_of_species=[]):
@@ -54,18 +88,13 @@ def single_decoding_routine(tree_path, number_of_nucleotids, alphabet, A,
     S = range(nbState)
 
     if alg == 'viterbi':
-        state_sequence_decoded = viterbi(S, A, b, likelihoods)
+        return {"real_states": states,
+                "decoded_states": viterbi(S, A, b, likelihoods)}
     elif alg == 'sp':
-        state_sequence_decoded = np.argmax(sum_product(S, A, b, likelihoods),
-                                           axis=0)
-
-    # Metrics
-    precision = np.sum(states == state_sequence_decoded) / number_of_nucleotids
-    reference_codon_sequence = translate_states_to_codons(states)
-    decoded_codon_sequence = translate_states_to_codons(state_sequence_decoded)
-    sens = sensitivity(reference_codon_sequence, decoded_codon_sequence)
-    spec = specificity(reference_codon_sequence, decoded_codon_sequence)
-    return precision, sens, spec
+        probabilities = sum_product(A, b, likelihoods)
+        return {"real_states": states,
+                "probabilities": probabilities,
+                "decoded_states": np.argmax(probabilities, axis=0)}
 
 
 def translate_states_to_codons(states):
